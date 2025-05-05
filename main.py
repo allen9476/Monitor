@@ -108,7 +108,7 @@ def monitor():
                 now = time.time()
                 if now - last_signal_time > COOL_DOWN_SECONDS:
                     msg = (
-                        f"{trigger_signal} | {trigger_from} 觸發 | SYMBOL\n"
+                        f"{trigger_signal} | {trigger_from} 觸發 | {SYMBOL}\n"
                         f"J(5m): {j_5m:.2f}, RSI(5m): {rsi_5m:.2f}\n"
                         f"J(15m): {j_15m:.2f}, RSI(15m): {rsi_15m:.2f}\n"
                         f"5m現價: {price_5m:.4f}"

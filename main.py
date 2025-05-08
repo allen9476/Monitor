@@ -93,25 +93,26 @@ def monitor():
             trigger_signal = None
             trigger_from = ""
             if (j_5m < 5 and rsi_5m < 30):
-                trigger_signal = "📉 超賣訊號"
+                trigger_signal = "📉 超賣"
                 trigger_from = "5m"
             elif (j_15m < 5 and rsi_15m < 30):
-                trigger_signal = "📉 超賣訊號"
+                trigger_signal = "📉 超賣"
                 trigger_from = "15m"
             elif (j_5m > 95 and rsi_5m > 70):
-                trigger_signal = "📈 超買訊號"
+                trigger_signal = "📈 超買"
                 trigger_from = "5m"
             elif (j_15m > 95 and rsi_15m > 70):
-                trigger_signal = "📈 超買訊號"
+                trigger_signal = "📈 超買"
                 trigger_from = "15m"
             if trigger_signal:
                 now = time.time()
                 if now - last_signal_time > COOL_DOWN_SECONDS:
                     msg = (
-                        f"{trigger_signal} | {trigger_from} 觸發 | {SYMBOL}\n"
+                        f"{trigger_from} 觸發{trigger_signal} | {SYMBOL}\n"
+                        f"5m現價: {price_5m:.4f}"
                         f"J(5m): {j_5m:.2f}, RSI(5m): {rsi_5m:.2f}\n"
                         f"J(15m): {j_15m:.2f}, RSI(15m): {rsi_15m:.2f}\n"
-                        f"5m現價: {price_5m:.4f}"
+
                     )
                     send_telegram_message(msg)
                     send_bark_message(msg)

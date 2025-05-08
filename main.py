@@ -9,7 +9,7 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN")
 CHAT_ID = os.environ.get("CHAT_ID")
 BARK_URL = os.environ.get("BARK_URL")
 
-SYMBOL = "CRVUSDT"
+SYMBOL = "TRUMPUSDT"
 COOL_DOWN_SECONDS = 300
 last_signal_time = 0
 

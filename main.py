@@ -109,9 +109,9 @@ def monitor():
                 if now - last_signal_time > COOL_DOWN_SECONDS:
                     msg = (
                         f"{trigger_from} 觸發{trigger_signal} | {SYMBOL}\n"
-                        f"5m現價: {price_5m:.4f}"
-                        f"J(5m): {j_5m:.2f}, RSI(5m): {rsi_5m:.2f}\n"
-                        f"J(15m): {j_15m:.2f}, RSI(15m): {rsi_15m:.2f}\n"
+                        f"現價: {price_5m:.4f}\n"
+                        f"(5m)J: {j_5m:.2f}, RSI: {rsi_5m:.2f}\n"
+                        f"(15m)J: {j_15m:.2f}, RSI: {rsi_15m:.2f}"
 
                     )
                     send_telegram_message(msg)

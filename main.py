@@ -85,22 +85,15 @@ def get_rsi_j(instId, interval):
 def monitor():
     global last_signal_time
     try:
-        j_5m, rsi_5m, price_5m = get_rsi_j(SYMBOL, "5m")
         j_15m, rsi_15m, price_15m = get_rsi_j(SYMBOL, "15m")
         now_time = pd.Timestamp.now(tz='Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
-        print(f"[{now_time}] 5m→J: {j_5m:.2f}, RSI: {rsi_5m:.2f}｜15m→J: {j_15m:.2f}, RSI: {rsi_15m:.2f}")
+        print(f"[{now_time}]｜15m→J: {j_15m:.2f}, RSI: {rsi_15m:.2f}")
         if all(pd.notna(x) for x in [j_5m, rsi_5m, j_15m, rsi_15m]):
             trigger_signal = None
             trigger_from = ""
-            if (j_5m < 5 and rsi_5m < 30):
-                trigger_signal = "📉 超賣"
-                trigger_from = "5m"
-            elif (j_15m < 5 and rsi_15m < 30):
+            if (j_15m < 5 and rsi_15m < 30):
                 trigger_signal = "📉 超賣"
                 trigger_from = "15m"
-            elif (j_5m > 95 and rsi_5m > 70):
-                trigger_signal = "📈 超買"
-                trigger_from = "5m"
             elif (j_15m > 95 and rsi_15m > 70):
                 trigger_signal = "📈 超買"
                 trigger_from = "15m"
@@ -109,8 +102,7 @@ def monitor():
                 if now - last_signal_time > COOL_DOWN_SECONDS:
                     msg = (
                         f"{trigger_from} 觸發{trigger_signal} | {SYMBOL}\n"
-                        f"現價: {price_5m:.4f}\n"
-                        f"(5m)J: {j_5m:.2f}, RSI: {rsi_5m:.2f}\n"
+                        f"現價: {price_15m:.4f}\n"
                         f"(15m)J: {j_15m:.2f}, RSI: {rsi_15m:.2f}"
 
                     )

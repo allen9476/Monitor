@@ -88,7 +88,7 @@ def monitor():
         j_15m, rsi_15m, price_15m = get_rsi_j(SYMBOL, "15m")
         now_time = pd.Timestamp.now(tz='Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
         print(f"[{now_time}]｜15m→J: {j_15m:.2f}, RSI: {rsi_15m:.2f}")
-        if all(pd.notna(x) for x in [j_5m, rsi_5m, j_15m, rsi_15m]):
+        if all(pd.notna(x) for x in [j_15m, rsi_15m]):
             trigger_signal = None
             trigger_from = ""
             if (j_15m < 5 and rsi_15m < 30):

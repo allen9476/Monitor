@@ -4,19 +4,20 @@ import time
 import traceback
 import os
 
-# Telegram 設定（從環境變數讀取）
+# Telegram & Bark 設定（從環境變數讀取）
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 CHAT_ID = os.environ.get("CHAT_ID")
 BARK_URL = os.environ.get("BARK_URL")
 
-SYMBOL = "TRUMPUSDT"
+# 設定
+SYMBOLS = ["TRUMPUSDT", "LTCUSDT"]
 COOL_DOWN_SECONDS = 300
-last_signal_time = 0
+last_signal_times = {symbol: 0 for symbol in SYMBOLS}  # 每個幣有獨立冷卻時間
 
 def send_telegram_message(text):
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    data = {"chat_id": CHAT_ID, "text": text}
     try:
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        data = {"chat_id": CHAT_ID, "text": text}
         requests.post(url, data=data, timeout=10)
         print("✅ 已發送 Telegram 通知")
     except Exception as e:
@@ -24,8 +25,7 @@ def send_telegram_message(text):
 
 def send_bark_message(text):
     try:
-        bark_url = f"{BARK_URL}{text}"
-        requests.get(bark_url, timeout=10)
+        requests.get(f"{BARK_URL}{text}", timeout=10)
         print("✅ 已發送 Bark 通知")
     except Exception as e:
         print("❌ Bark 發送錯誤:", str(e))
@@ -37,21 +37,15 @@ def calculate_kdj(df, n=9):
     df['rsv'] = (df['c'] - low_min) / (high_max - low_min) * 100
     k_list, d_list = [], []
     for i in range(len(df)):
-        if i == 0:
-            k = 50
-            d = 50
-        else:
-            k = (2 / 3) * k_list[-1] + (1 / 3) * df.loc[i, 'rsv']
-            d = (2 / 3) * d_list[-1] + (1 / 3) * k
+        k = (2 / 3) * k_list[-1] + (1 / 3) * df.loc[i, 'rsv'] if i else 50
+        d = (2 / 3) * d_list[-1] + (1 / 3) * k if i else 50
         k_list.append(k)
         d_list.append(d)
-    df['k'] = k_list
-    df['d'] = d_list
-    df['j'] = 3 * df['k'] - 2 * df['d']
+    df['k'], df['d'], df['j'] = k_list, d_list, 3 * pd.Series(k_list) - 2 * pd.Series(d_list)
     return df
 
-def fetch_data(instId, interval):
-    url = f"https://api.binance.com/api/v3/klines?symbol={instId}&interval={interval}&limit=200"
+def fetch_data(symbol, interval):
+    url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit=200"
     for attempt in range(5):
         try:
             r = requests.get(url, timeout=10)
@@ -61,12 +55,12 @@ def fetch_data(instId, interval):
                 raise ValueError("資料不足")
             return data
         except Exception as e:
-            print(f"❌ 拉取資料錯誤，第 {attempt+1}/5 次：{e}")
+            print(f"❌ 拉取 {symbol} 資料錯誤，第 {attempt+1}/5 次：{e}")
             time.sleep(5)
-    raise Exception("無法取得數據")
+    raise Exception(f"{symbol} 無法取得數據")
 
-def get_rsi_j(instId, interval):
-    data = fetch_data(instId, interval)
+def get_rsi_j(symbol, interval):
+    data = fetch_data(symbol, interval)
     df = pd.DataFrame(data)[[0, 1, 2, 3, 4, 5]]
     df.columns = ["ts", "o", "h", "l", "c", "vol"]
     df = df[df["vol"].astype(float) > 0].reset_index(drop=True)
@@ -82,41 +76,39 @@ def get_rsi_j(instId, interval):
     latest = df.iloc[-1]
     return latest["j"], latest["rsi"], latest["c"]
 
-def monitor():
-    global last_signal_time
+def monitor(symbol):
     try:
-        j_15m, rsi_15m, price_15m = get_rsi_j(SYMBOL, "15m")
+        j, rsi, price = get_rsi_j(symbol, "15m")
         now_time = pd.Timestamp.now(tz='Asia/Shanghai').strftime('%Y-%m-%d %H:%M:%S')
-        print(f"[{now_time}]｜15m→J: {j_15m:.2f}, RSI: {rsi_15m:.2f}")
-        if all(pd.notna(x) for x in [j_15m, rsi_15m]):
+        print(f"[{now_time}]｜{symbol}｜15m → J: {j:.2f}, RSI: {rsi:.2f}")
+        if pd.notna(j) and pd.notna(rsi):
             trigger_signal = None
-            trigger_from = ""
-            if (j_15m < 5 and rsi_15m < 30):
+            if j < 5 and rsi < 30:
                 trigger_signal = "📉 超賣"
-                trigger_from = "15m"
-            elif (j_15m > 95 and rsi_15m > 70):
+            elif j > 95 and rsi > 70:
                 trigger_signal = "📈 超買"
-                trigger_from = "15m"
             if trigger_signal:
                 now = time.time()
-                if now - last_signal_time > COOL_DOWN_SECONDS:
+                if now - last_signal_times[symbol] > COOL_DOWN_SECONDS:
                     msg = (
-                        f"{trigger_from} 觸發{trigger_signal} | {SYMBOL}\n"
-                        f"現價: {price_15m:.4f}\n"
-                        f"(15m)J: {j_15m:.2f}, RSI: {rsi_15m:.2f}"
-
+                        f"15m 觸發{trigger_signal} | {symbol}\n"
+                        f"現價: {price:.4f}\n"
+                        f"J: {j:.2f}, RSI: {rsi:.2f}"
                     )
                     send_telegram_message(msg)
                     send_bark_message(msg)
-                    last_signal_time = now
+                    last_signal_times[symbol] = now
                 else:
-                    print(f"⏳ 冷卻中，剩餘 {int(COOL_DOWN_SECONDS - (now - last_signal_time))} 秒")
+                    print(f"⏳ {symbol} 冷卻中，剩餘 {int(COOL_DOWN_SECONDS - (now - last_signal_times[symbol]))} 秒")
     except Exception as e:
-        error_text = f"❌ 發生錯誤：{str(e)}\n{traceback.format_exc()}"
+        error_text = f"❌ {symbol} 發生錯誤：{str(e)}\n{traceback.format_exc()}"
         print(error_text)
         send_telegram_message(error_text)
         send_bark_message(error_text)
 
+# 主迴圈
 while True:
-    monitor()
-    time.sleep(30)
+    for symbol in SYMBOLS:
+        monitor(symbol)
+        time.sleep(2)  # 各幣間稍微間隔一下避免 API 過載
+    time.sleep(30)  # 整體監控頻率

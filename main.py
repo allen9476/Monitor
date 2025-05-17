@@ -10,7 +10,7 @@ CHAT_ID = os.environ.get("CHAT_ID")
 BARK_URL = os.environ.get("BARK_URL")
 
 # 設定
-SYMBOLS = ["TRUMPUSDT", "LTCUSDT", "DOGEUSDT"]
+SYMBOLS = ["TRUMPUSDT", "LTCUSDT", "DOGEUSDT", "PNUTUSDT"]
 COOL_DOWN_SECONDS = 300
 last_signal_times = {symbol: 0 for symbol in SYMBOLS}  # 每個幣有獨立冷卻時間
 
@@ -83,10 +83,10 @@ def monitor(symbol):
         print(f"[{now_time}]｜{symbol}｜15m → J: {j:.2f}, RSI: {rsi:.2f}")
         if pd.notna(j) and pd.notna(rsi):
             trigger_signal = None
-            if j < 5 and rsi < 30:
-                trigger_signal = "📉 超賣"
-            elif j > 95 and rsi > 70:
-                trigger_signal = "📈 超買"
+            if j < 3 and rsi < 30:
+                trigger_signal = "↘️ 超賣"
+            elif j > 97 and rsi > 70:
+                trigger_signal = "↗️ 超買"
             if trigger_signal:
                 now = time.time()
                 if now - last_signal_times[symbol] > COOL_DOWN_SECONDS:

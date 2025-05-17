@@ -84,14 +84,14 @@ def monitor(symbol):
         if pd.notna(j) and pd.notna(rsi):
             trigger_signal = None
             if j < 3 and rsi < 30:
-                trigger_signal = "↘️ 超賣"
+                trigger_signal = "↘️"
             elif j > 97 and rsi > 70:
-                trigger_signal = "↗️ 超買"
+                trigger_signal = "↗️"
             if trigger_signal:
                 now = time.time()
                 if now - last_signal_times[symbol] > COOL_DOWN_SECONDS:
                     msg = (
-                        f"15m 觸發{trigger_signal} | {symbol}\n"
+                        f"15m {trigger_signal} | {symbol}\n"
                         f"現價: {price:.4f}\n"
                         f"J: {j:.2f}, RSI: {rsi:.2f}"
                     )

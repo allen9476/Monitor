@@ -11,6 +11,10 @@ BARK_URL = os.environ.get("BARK_URL")
 
 # 設定
 SYMBOLS = ["FLOKIUSDT", "DOGEUSDT", "PNUTUSDT"]
+PRICE_DECIMALS = {
+    "FLOKIUSDT": 7,
+    "DOGEUSDT": 5,
+}  # 幣價顯示小數位，默認4位
 COOL_DOWN_SECONDS = 300
 last_signal_times = {symbol: 0 for symbol in SYMBOLS}  # 每個幣有獨立冷卻時間
 
@@ -92,10 +96,7 @@ def monitor(symbol):
                 if now - last_signal_times[symbol] > COOL_DOWN_SECONDS:
                     msg = (
                         f"15m {trigger_signal} | {symbol}\n"
-                        if symbol == "FLOKIUSDT":
-                            f"現價: {price:.8f}\n" 
-                        else: 
-                            f"現價: {price:.4f}\n"
+                        f"現價: {price:.{PRICE_DECIMALS.get(symbol, 4)}f}\n"
                         f"J: {j:.2f}, RSI: {rsi:.2f}"
                     )
                     send_telegram_message(msg)

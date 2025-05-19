@@ -92,7 +92,7 @@ def monitor(symbol):
                 if now - last_signal_times[symbol] > COOL_DOWN_SECONDS:
                     msg = (
                         f"15m {trigger_signal} | {symbol}\n"
-                        f"現價: {price:.4f}\n"
+                        f"現價: {price:.8f}\n" if symbol == "FLOKIUSDT" else f"現價: {price:.4f}\n"
                         f"J: {j:.2f}, RSI: {rsi:.2f}"
                     )
                     send_telegram_message(msg)

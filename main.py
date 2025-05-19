@@ -10,7 +10,7 @@ CHAT_ID = os.environ.get("CHAT_ID")
 BARK_URL = os.environ.get("BARK_URL")
 
 # 設定
-SYMBOLS = ["TRUMPUSDT", "LTCUSDT", "DOGEUSDT", "PNUTUSDT"]
+SYMBOLS = ["FLOKIUSDT", "DOGEUSDT", "PNUTUSDT"]
 COOL_DOWN_SECONDS = 300
 last_signal_times = {symbol: 0 for symbol in SYMBOLS}  # 每個幣有獨立冷卻時間
 
